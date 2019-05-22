@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t bnamita/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run bnamita/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t bnamita/multi-client ./client
+  - docker build -t bnamita/multi-nginx ./nginx
+  - docker build -t bnamita/multi-server ./server
+  - docker build -t bnamita/multi-worker ./worker
+  # log in to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take those images and push to docker hub
+  - docker push bnamita/multi-client
+  - docker push bnamita/multi-nginx
+  - docker push bnamita/multi-server
+  - docker push bnamita/multi-worker
